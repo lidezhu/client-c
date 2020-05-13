@@ -8,6 +8,7 @@
 #include <queue>
 #include <thread>
 
+
 namespace pingcap
 {
 namespace coprocessor
@@ -131,6 +132,8 @@ private:
             if (tasks.size() == task_index)
             {
                 unfinished_thread--;
+                lk.unlock();
+                cond_var.notify_one();
                 return;
             }
             const copTask & task = tasks[task_index];
