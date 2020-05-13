@@ -29,7 +29,8 @@ enum BackoffType
     boPDRPC,
     boRegionMiss,
     boUpdateLeader,
-    boServerBusy
+    boServerBusy,
+    boTxnNotFound
 };
 
 inline int expo(int base, int cap, int n) { return std::min(double(cap), double(base) * std::pow(2.0, double(n))); }

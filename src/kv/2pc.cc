@@ -88,7 +88,7 @@ void TwoPhaseCommitter::prewriteSingleBatch(Backoffer & bo, const BatchKeys & ba
                 auto lock = extractLockFromKeyErr(err);
                 locks.push_back(lock);
             }
-            auto ms_before_exired = cluster->lock_resolver->ResolveLocks(bo, start_ts, locks);
+            auto ms_before_exired = cluster->lock_resolver->resolveLocksForWrite(bo, start_ts, locks);
             if (ms_before_exired > 0)
             {
                 bo.backoffWithMaxSleep(
