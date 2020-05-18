@@ -7,6 +7,7 @@
 
 #include <queue>
 #include <string>
+#include <spdlog/spdlog.h>
 
 namespace pingcap
 {
@@ -30,6 +31,8 @@ constexpr int bigTxnThreshold = 16;
 const uint64_t defaultLockTTL = 3000;
 
 const uint64_t maxLockTTL = 120000;
+
+const uint64_t ttlFactor = 6000;
 
 // Lock represents a lock from tikv server.
 struct Lock

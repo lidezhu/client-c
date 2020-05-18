@@ -2,6 +2,7 @@
 #include <pingcap/kv/RegionClient.h>
 
 #include <unordered_set>
+#include <spdlog/spdlog.h>
 
 namespace pingcap
 {
@@ -89,7 +90,7 @@ int64_t LockResolver::resolveLocks(Backoffer & bo, uint64_t caller_start_ts, std
             }
         }
     }
-    if (!push_fail)
+    if (push_fail)
     {
         pushed.clear();
     }
@@ -116,6 +117,7 @@ TxnStatus LockResolver::getTxnStatus(
     req->set_lock_ts(txn_id);
     req->set_caller_start_ts(caller_start_ts);
     req->set_current_ts(current_ts);
+    spdlog::info("getTxnStatus caller_start_ts: " + std::to_string(caller_start_ts) + " current_ts " + std::to_string(current_ts));
     req->set_rollback_if_not_exist(rollback_if_not_exists);
     for (;;)
     {
@@ -136,6 +138,7 @@ TxnStatus LockResolver::getTxnStatus(
         if (response->has_error())
         {
             auto & key_error = response->error();
+            // TODO: through txn_not_found exception for upper logic to handle it
             if(key_error.has_txn_not_found())
             {
                 return status;
@@ -258,7 +261,9 @@ TxnStatus LockResolver::getTxnStatusFromLock(Backoffer & bo, LockPtr lock, uint6
     {
         try
         {
-            return getTxnStatus(bo, lock->txn_id, lock->primary, caller_start_ts, current_ts, rollback_if_not_exists);
+            TxnStatus status = getTxnStatus(bo, lock->txn_id, lock->primary, caller_start_ts, current_ts, rollback_if_not_exists);
+            spdlog::info("txn status " + std::to_string(status.ttl) + " " + std::to_string(status.action));
+            return status;
         }
         catch (Exception & e)
         {

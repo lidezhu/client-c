@@ -23,9 +23,14 @@ struct Txn
 
     Buffer buffer;
 
-    int64_t start_ts;
+    uint64_t start_ts;
 
-    Txn(Cluster * cluster_) : cluster(cluster_), start_ts(cluster_->pd_client->getTS()) {}
+    std::chrono::milliseconds start_time;
+
+    Txn(Cluster * cluster_) : cluster(cluster_), start_ts(cluster_->pd_client->getTS())
+    {
+        start_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+    }
 
     void commit()
     {
@@ -37,11 +42,11 @@ struct Txn
 
     std::pair<std::string, bool> get(const std::string & key)
     {
-        auto it = buffer.find(key);
-        if (it != buffer.end())
-        {
-            return std::make_pair(it->second, true);
-        }
+//        auto it = buffer.find(key);
+//        if (it != buffer.end())
+//        {
+//            return std::make_pair(it->second, true);
+//        }
         Snapshot snapshot(cluster, start_ts);
         std::string value = snapshot.Get(key);
         if (value == "")

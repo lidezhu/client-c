@@ -1,11 +1,12 @@
-list (APPEND test_includes ${KVPROTO_INCLUDE_DIR} ${kvClient_INCLUDE_DIR} ${fiu_include_dirs})
+list (APPEND test_includes ${KVPROTO_INCLUDE_DIR} ${kvClient_INCLUDE_DIR} ${fiu_include_dirs} ${spdlog_INCLUDE_DIR})
 
 list(APPEND test_libs
     kvproto
     kv_client
     ${Protobuf_LIBRARY}
-    ${Poco_Net_LIBRARY}
-    PocoJSON
+#    ${Poco_Net_LIBRARY}
+    Poco::Net
+    Poco::JSON
     gtest_main
     fiu
     gRPC::grpc++_unsecure)
@@ -18,3 +19,4 @@ include(CTest)
 add_test(kv_client_test kv_client_ut)
 
 add_subdirectory(bank_test)
+add_subdirectory(real_tikv_test)
