@@ -2,7 +2,6 @@
 
 #include <pingcap/kv/Cluster.h>
 #include <pingcap/kv/RegionClient.h>
-#include <spdlog/spdlog.h>
 
 namespace pingcap
 {
