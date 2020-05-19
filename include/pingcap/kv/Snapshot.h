@@ -4,24 +4,25 @@
 #include <pingcap/kv/RegionClient.h>
 #include <spdlog/spdlog.h>
 
-namespace pingcap {
-namespace kv {
+namespace pingcap
+{
+namespace kv
+{
 
 struct Scanner;
 
-struct Snapshot {
-  Cluster *cluster;
-  int64_t version;
+struct Snapshot
+{
+    Cluster * cluster;
+    int64_t version;
 
-  Snapshot(Cluster *cluster_, uint64_t version_)
-      : cluster(cluster_), version(version_) {}
-  Snapshot(Cluster *cluster_)
-      : cluster(cluster_), version(cluster_->pd_client->getTS()) {}
+    Snapshot(Cluster * cluster_, uint64_t version_) : cluster(cluster_), version(version_) {}
+    Snapshot(Cluster * cluster_) : cluster(cluster_), version(cluster_->pd_client->getTS()) {}
 
-  std::string Get(const std::string &key);
-  std::string Get(Backoffer &bo, const std::string &key);
+    std::string Get(const std::string & key);
+    std::string Get(Backoffer & bo, const std::string & key);
 
-  Scanner Scan(const std::string &begin, const std::string &end);
+    Scanner Scan(const std::string & begin, const std::string & end);
 };
 
 } // namespace kv
