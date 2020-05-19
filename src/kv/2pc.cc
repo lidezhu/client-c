@@ -89,7 +89,6 @@ void TwoPhaseCommitter::prewriteSingleBatch(Backoffer & bo, const BatchKeys & ba
         req->set_primary_lock(primary_lock);
         req->set_start_version(start_ts);
         req->set_lock_ttl(lock_ttl);
-        // TODO: use correct txn size.
         req->set_txn_size(batch_txn_size);
         // TODO: set right min_commit_ts for pessimistic lock
         req->set_min_commit_ts(start_ts + 1);

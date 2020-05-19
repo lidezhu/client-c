@@ -2,7 +2,6 @@
 #include <pingcap/kv/Backoff.h>
 #include <pingcap/kv/Scanner.h>
 #include <pingcap/kv/Snapshot.h>
-#include <spdlog/spdlog.h>
 
 namespace pingcap
 {
