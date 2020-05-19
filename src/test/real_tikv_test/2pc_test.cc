@@ -67,24 +67,21 @@ TEST_F(TestWith2PCRealTiKV, testPrewriteRollback) {
     // Commit.
     {
         Txn txn(test_cluster.get());
-        txn.set("a", "a0");
-        txn.set("b", "b0");
+        txn.set("a", "i am client a");
+        txn.set("b", "i am client b");
         txn.commit();
 
         Snapshot snap(test_cluster.get());
-        ASSERT_EQ(snap.Get("a"), "a0");
-        ASSERT_EQ(snap.Get("b"), "b0");
+        ASSERT_EQ(snap.Get("a"), "i am client a");
+        ASSERT_EQ(snap.Get("b"), "i am client b");
     }
     spdlog::info("commit finished");
 
     // Prewrite.
     {
         Txn txn1(test_cluster.get());
-        txn1.set("a", "a1");
-        txn1.set("b", "b1");
-
-        spdlog::info("txn1 start ts: " + std::to_string(txn1.start_ts));
-
+        txn1.set("a", "i am client a1");
+        txn1.set("b", "i am client b1");
         TestTwoPhaseCommitter committer{&txn1};
         Backoffer prewrite_bo(prewriteMaxBackoff);
         committer.prewriteKeys(prewrite_bo, committer.keys());
@@ -95,7 +92,10 @@ TEST_F(TestWith2PCRealTiKV, testPrewriteRollback) {
             spdlog::info("txn2 start ts: " + std::to_string(txn2.start_ts));
             auto result = txn2.get("a");
             ASSERT_EQ(result.second, true);
-            ASSERT_EQ(result.first, "a0");
+            ASSERT_EQ(result.first, "i am client a");
+            auto result2 = txn2.get("b");
+            ASSERT_EQ(result2.second, true);
+            ASSERT_EQ(result2.first, "i am client b");
 //            test_cluster->min_commit_ts_pushed.clear();
 //            spdlog::info("min_commit_ts_pushed cleared\n\n");
 //            Snapshot snap1(test_cluster.get());
@@ -119,22 +119,49 @@ TEST_F(TestWith2PCRealTiKV, testPrewriteRollback) {
             std::cout << "\nSnapshot get Failed.\n";
         }
 
-//        try
-//        {
-//            committer.setCommitTS(test_cluster->pd_client->getTS());
-//            Backoffer commit_bo(commitMaxBackoff);
-//            committer.commitKeys(commit_bo, committer.keys());
-//        }
-//        catch (Exception & e)
-//        {
-//            std::cout << "\nCommit Failed.\n";
-//        }
-//
-//        test_cluster->min_commit_ts_pushed.clear();
-//        spdlog::info("min_commit_ts_pushed cleared");
-//        Snapshot snap2(test_cluster.get());
-//        ASSERT_EQ(snap2.Get("a"), "a1");
-//        ASSERT_EQ(snap2.Get("b"), "b1");
+        try
+        {
+            committer.setCommitTS(test_cluster->pd_client->getTS());
+            Backoffer commit_bo(commitMaxBackoff);
+            committer.commitKeys(commit_bo, committer.keys());
+        }
+        catch (Exception & e)
+        {
+            std::cout << "\nCommit Failed.\n";
+        }
+
+        test_cluster->min_commit_ts_pushed.clear();
+        spdlog::info("min_commit_ts_pushed cleared");
+        Snapshot snap2(test_cluster.get());
+        ASSERT_EQ(snap2.Get("a"), "i am client a1");
+        ASSERT_EQ(snap2.Get("b"), "i am client b1");
+    }
+}
+
+
+TEST_F(TestWith2PCRealTiKV, testTxnNotFound) {
+    {
+        Txn txn(test_cluster.get());
+        txn.set("a", "i am client a");
+        txn.set("b", "i am client b");
+        txn.commit();
+
+        Snapshot snap(test_cluster.get());
+        ASSERT_EQ(snap.Get("a"), "i am client a");
+        ASSERT_EQ(snap.Get("b"), "i am client b");
+    }
+
+    {
+        Txn txn1(test_cluster.get());
+        txn1.set("a", "i am client a1");
+        txn1.set("b", "i am client b1");
+        TestTwoPhaseCommitter committer{&txn1};
+        Backoffer prewrite_bo(prewriteMaxBackoff);
+        committer.prewriteKeys(prewrite_bo, {"b"});
+
+        Txn txn2(test_cluster.get());
+        auto result = txn2.get("a");
+        ASSERT_EQ(result.second, false);
     }
 }
 

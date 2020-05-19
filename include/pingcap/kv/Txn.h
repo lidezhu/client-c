@@ -42,11 +42,11 @@ struct Txn
 
     std::pair<std::string, bool> get(const std::string & key)
     {
-//        auto it = buffer.find(key);
-//        if (it != buffer.end())
-//        {
-//            return std::make_pair(it->second, true);
-//        }
+        auto it = buffer.find(key);
+        if (it != buffer.end())
+        {
+            return std::make_pair(it->second, true);
+        }
         Snapshot snapshot(cluster, start_ts);
         std::string value = snapshot.Get(key);
         if (value == "")

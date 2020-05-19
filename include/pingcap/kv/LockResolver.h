@@ -7,7 +7,6 @@
 
 #include <queue>
 #include <string>
-#include <spdlog/spdlog.h>
 
 namespace pingcap
 {

@@ -2,7 +2,6 @@
 #include <pingcap/kv/RegionClient.h>
 
 #include <unordered_set>
-#include <spdlog/spdlog.h>
 
 namespace pingcap
 {
@@ -73,10 +72,10 @@ int64_t LockResolver::resolveLocks(Backoffer & bo, uint64_t caller_start_ts, std
                 // This could avoids the deadlock scene of two large transaction.
                 if (lock->lock_type != ::kvrpcpb::PessimisticLock && lock->txn_id > caller_start_ts)
                 {
-                    // TODO: Abort current transaction
                     log->warning("write conflict detected");
                     pushed.clear();
-                    return before_txn_expired.value();
+                    // TODO: throw write confict exception
+                    throw Exception("write conflict", ErrorCodes::UnknownError);
                 }
             }
             else
@@ -117,7 +116,6 @@ TxnStatus LockResolver::getTxnStatus(
     req->set_lock_ts(txn_id);
     req->set_caller_start_ts(caller_start_ts);
     req->set_current_ts(current_ts);
-    spdlog::info("getTxnStatus caller_start_ts: " + std::to_string(caller_start_ts) + " current_ts " + std::to_string(current_ts));
     req->set_rollback_if_not_exist(rollback_if_not_exists);
     for (;;)
     {
@@ -138,10 +136,9 @@ TxnStatus LockResolver::getTxnStatus(
         if (response->has_error())
         {
             auto & key_error = response->error();
-            // TODO: through txn_not_found exception for upper logic to handle it
-            if(key_error.has_txn_not_found())
+            if (key_error.has_txn_not_found())
             {
-                return status;
+                throw Exception("txn not found: ", ErrorCodes::TxnNotFound);
             }
             else
             {
@@ -207,7 +204,7 @@ void LockResolver::resolveLock(Backoffer & bo, LockPtr lock, TxnStatus & status,
     }
 }
 
-void LockResolver::resolvePessimisticLock(Backoffer &bo, LockPtr lock, std::unordered_set<RegionVerID> &set) {
+void LockResolver::resolvePessimisticLock(Backoffer & bo, LockPtr lock, std::unordered_set<RegionVerID> &set) {
     for (;;)
     {
         auto loc = cluster->region_cache->locateKey(bo, lock->key);
@@ -261,9 +258,7 @@ TxnStatus LockResolver::getTxnStatusFromLock(Backoffer & bo, LockPtr lock, uint6
     {
         try
         {
-            TxnStatus status = getTxnStatus(bo, lock->txn_id, lock->primary, caller_start_ts, current_ts, rollback_if_not_exists);
-            spdlog::info("txn status " + std::to_string(status.ttl) + " " + std::to_string(status.action));
-            return status;
+            return getTxnStatus(bo, lock->txn_id, lock->primary, caller_start_ts, current_ts, rollback_if_not_exists);
         }
         catch (Exception & e)
         {

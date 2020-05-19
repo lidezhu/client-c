@@ -46,9 +46,7 @@ TwoPhaseCommitter::TwoPhaseCommitter(Txn * txn) : log(&Logger::get("pingcap.tikv
     start_ts = txn->start_ts;
     primary_lock = keys[0];
     txn_size = mutations.size();
-//    txn_size = 64 * 1024 * 0124;
-    lock_ttl = managedLockTTL;
-//    lock_ttl = tnxLockTTL(txn->start_time, txn_size);
+    lock_ttl = tnxLockTTL(txn->start_time, txn_size);
 }
 
 void TwoPhaseCommitter::execute()
@@ -93,7 +91,6 @@ void TwoPhaseCommitter::prewriteSingleBatch(Backoffer & bo, const BatchKeys & ba
         req->set_lock_ttl(lock_ttl);
         // TODO: use correct txn size.
         req->set_txn_size(batch_txn_size);
-//        req->set_txn_size(64 * 1024 * 1024);
         // TODO: set right min_commit_ts for pessimistic lock
         req->set_min_commit_ts(start_ts + 1);
 
