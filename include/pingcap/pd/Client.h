@@ -13,107 +13,104 @@
 #include <shared_mutex>
 #include <thread>
 
-namespace pingcap
-{
-namespace pd
-{
+namespace pingcap {
+namespace pd {
 
-struct SecurityOption
-{
-    std::string CAPath;
-    std::string CertPath;
-    std::string KeyPath;
+struct SecurityOption {
+  std::string CAPath;
+  std::string CertPath;
+  std::string KeyPath;
 };
 
-class Client : public IClient
-{
-    const int max_init_cluster_retries;
+class Client : public IClient {
+  const int max_init_cluster_retries;
 
-    const std::chrono::seconds pd_timeout;
+  const std::chrono::seconds pd_timeout;
 
-    const std::chrono::microseconds loop_interval;
+  const std::chrono::microseconds loop_interval;
 
-    const std::chrono::seconds update_leader_interval;
+  const std::chrono::seconds update_leader_interval;
 
 public:
-    Client(const std::vector<std::string> & addrs);
+  Client(const std::vector<std::string> &addrs);
 
-    ~Client() override;
+  ~Client() override;
 
-    //uint64_t getClusterID() override;
+  // uint64_t getClusterID() override;
 
-    // only implement a weak get ts.
-    uint64_t getTS() override;
+  // only implement a weak get ts.
+  uint64_t getTS() override;
 
-    std::pair<metapb::Region, metapb::Peer> getRegionByKey(const std::string & key) override;
+  std::pair<metapb::Region, metapb::Peer>
+  getRegionByKey(const std::string &key) override;
 
-    //std::pair<metapb::Region, metapb::Peer> getPrevRegion(std::string key) override;
+  // std::pair<metapb::Region, metapb::Peer> getPrevRegion(std::string key)
+  // override;
 
-    std::pair<metapb::Region, metapb::Peer> getRegionByID(uint64_t region_id) override;
+  std::pair<metapb::Region, metapb::Peer>
+  getRegionByID(uint64_t region_id) override;
 
-    metapb::Store getStore(uint64_t store_id) override;
+  metapb::Store getStore(uint64_t store_id) override;
 
-    //std::vector<metapb::Store> getAllStores() override;
+  // std::vector<metapb::Store> getAllStores() override;
 
-    uint64_t getGCSafePoint() override;
+  uint64_t getGCSafePoint() override;
 
-    bool isMock() override;
+  bool isMock() override;
 
 private:
-    void initClusterID();
+  void initClusterID();
 
-    void updateLeader();
+  void updateLeader();
 
-    void updateURLs(const ::google::protobuf::RepeatedPtrField<::pdpb::Member> & members);
+  void updateURLs(
+      const ::google::protobuf::RepeatedPtrField<::pdpb::Member> &members);
 
-    void leaderLoop();
+  void leaderLoop();
 
-    void switchLeader(const ::google::protobuf::RepeatedPtrField<std::string> &);
+  void switchLeader(const ::google::protobuf::RepeatedPtrField<std::string> &);
 
-    struct PDConnClient
-    {
-        std::shared_ptr<grpc::Channel> channel;
-        std::unique_ptr<pdpb::PD::Stub> stub;
-        PDConnClient(std::string addr)
-        {
-            channel = grpc::CreateChannel(addr, grpc::InsecureChannelCredentials());
-            stub = pdpb::PD::NewStub(channel);
-        }
-    };
+  struct PDConnClient {
+    std::shared_ptr<grpc::Channel> channel;
+    std::unique_ptr<pdpb::PD::Stub> stub;
+    PDConnClient(std::string addr) {
+      channel = grpc::CreateChannel(addr, grpc::InsecureChannelCredentials());
+      stub = pdpb::PD::NewStub(channel);
+    }
+  };
 
-    std::shared_ptr<PDConnClient> leaderClient();
+  std::shared_ptr<PDConnClient> leaderClient();
 
-    pdpb::GetMembersResponse getMembers(std::string);
+  pdpb::GetMembersResponse getMembers(std::string);
 
-    pdpb::RequestHeader * requestHeader();
+  pdpb::RequestHeader *requestHeader();
 
-    std::shared_ptr<PDConnClient> getOrCreateGRPCConn(const std::string &);
+  std::shared_ptr<PDConnClient> getOrCreateGRPCConn(const std::string &);
 
-    std::shared_mutex leader_mutex;
+  std::shared_mutex leader_mutex;
 
-    std::mutex channel_map_mutex;
+  std::mutex channel_map_mutex;
 
-    std::mutex update_leader_mutex;
+  std::mutex update_leader_mutex;
 
-    std::unordered_map<std::string, std::shared_ptr<PDConnClient>> channel_map;
+  std::unordered_map<std::string, std::shared_ptr<PDConnClient>> channel_map;
 
-    std::vector<std::string> urls;
+  std::vector<std::string> urls;
 
-    uint64_t cluster_id;
+  uint64_t cluster_id;
 
-    std::string leader;
+  std::string leader;
 
-    std::atomic<bool> work_threads_stop;
+  std::atomic<bool> work_threads_stop;
 
-    std::thread work_thread;
+  std::thread work_thread;
 
-    std::condition_variable update_leader_cv;
+  std::condition_variable update_leader_cv;
 
-    std::atomic<bool> check_leader;
+  std::atomic<bool> check_leader;
 
-    Logger * log;
+  Logger *log;
 };
-
 
 } // namespace pd
 } // namespace pingcap
