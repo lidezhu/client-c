@@ -4,7 +4,6 @@
 #include <pingcap/kv/Txn.h>
 
 #include <iostream>
-#include <spdlog/spdlog.h>
 
 #include "../test_helper.h"
 
