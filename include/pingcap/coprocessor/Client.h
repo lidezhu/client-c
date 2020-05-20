@@ -8,7 +8,6 @@
 #include <queue>
 #include <thread>
 
-
 namespace pingcap
 {
 namespace coprocessor

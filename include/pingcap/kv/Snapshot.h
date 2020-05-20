@@ -13,7 +13,7 @@ struct Scanner;
 struct Snapshot
 {
     Cluster * cluster;
-    int64_t version;
+    const int64_t version;
 
     Snapshot(Cluster * cluster_, uint64_t version_) : cluster(cluster_), version(version_) {}
     Snapshot(Cluster * cluster_) : cluster(cluster_), version(cluster_->pd_client->getTS()) {}
