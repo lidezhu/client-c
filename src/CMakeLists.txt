@@ -14,15 +14,13 @@ list(APPEND kvClient_sources coprocessor/Client.cc)
 
 set(kvClient_INCLUDE_DIR ${kvClient_SOURCE_DIR}/include)
 
-set(spdlog_INCLUDE_DIR ${kvClient_SOURCE_DIR}/src/spdlog/include)
-
 # Only enable fiu under test mode.
 if (ENABLE_TESTS)
     add_definitions(-DFIU_ENABLE)
 endif()
 
 add_library(kv_client ${kvClient_sources})
-target_include_directories(kv_client PUBLIC ${KVPROTO_INCLUDE_DIR} ${kvClient_INCLUDE_DIR} ${fiu_include_dirs} ${spdlog_INCLUDE_DIR})
+target_include_directories(kv_client PUBLIC ${KVPROTO_INCLUDE_DIR} ${kvClient_INCLUDE_DIR} ${fiu_include_dirs})
 target_link_libraries(kv_client kvproto ${Poco_Foundation_LIBRARY} fiu)
 
 if (ENABLE_TESTS)

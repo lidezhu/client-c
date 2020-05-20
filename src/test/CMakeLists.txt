@@ -1,10 +1,9 @@
-list (APPEND test_includes ${KVPROTO_INCLUDE_DIR} ${kvClient_INCLUDE_DIR} ${fiu_include_dirs} ${spdlog_INCLUDE_DIR})
+list (APPEND test_includes ${KVPROTO_INCLUDE_DIR} ${kvClient_INCLUDE_DIR} ${fiu_include_dirs})
 
 list(APPEND test_libs
     kvproto
     kv_client
     ${Protobuf_LIBRARY}
-#    ${Poco_Net_LIBRARY}
     Poco::Net
     Poco::JSON
     gtest_main
